@@ -30,3 +30,5 @@ syn.mod from Geiger et al. (1997). Only the na.mod was changed to
 correct for an error in the trap0() function.
 
 6/8/2007 version updated: includes short run demo option for ModelDB
+20120125 upgrades from euler to derivimplicit in cad.mod as per
+http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592
