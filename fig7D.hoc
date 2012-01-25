@@ -1,0 +1,74 @@
+load_file("nrngui.hoc")
+
+xopen("./Ri18geo.hoc")
+xopen("./Ri18init.hoc")
+
+init_params()
+init_spine()
+init_cell()
+init_vm()
+hexp()
+
+seed_ih = 100
+
+print "Ri18 successfully built\n"
+
+objref syn, b, g
+b = new VBox()
+b.intercept(1)
+g = new Graph()
+g.size(300,tstop,-85,-10)
+g.color(0)
+g.addvar("Vm_dendrite (1000um from soma)","dend1[720].v(.5)", 2, 1)
+g.addvar("Vm_soma","dend1[21].v(.5)", 1, 1)
+g.xaxis(0)
+g.yaxis(0)
+g.begin()
+g.family(1)
+b.intercept(0)
+b.map()
+
+proc synn(){
+	access dend1[177]
+	syn = new syn2(0.5)
+	syn.onset = 500
+	syn.tau0  = 0.2	 
+	syn.tau1 = 2
+	syn.gmax = 0.092
+}
+
+proc init() {local saveDt, i
+	access dend1[21]	//soma
+	finitialize(v_init)
+	fcurrent()
+	saveDt = dt
+	dt = 1
+	for i=1,(200/dt) advance()		//to speed up initialization
+	dt = .1
+	for i=1,(200/dt) advance()	
+	dt = saveDt
+}
+
+proc run (){
+	while (t <= tstop) {
+		advance() 
+	}
+}
+
+proc advance() {
+	g.plot(t)
+	fadvance()
+	g.flush()
+	doNotify()
+}
+
+t=0
+tstop=520        
+dt=.01
+
+nrncontrolmenu()
+synn()
+init()
+startsw()
+continuerun(520)
+	

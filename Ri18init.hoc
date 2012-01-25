@@ -1,0 +1,241 @@
+// -------------------------------------------
+//initialize user-defined membrane parameters 
+//-------------------------------------------
+
+proc init_params() {
+	celsius=35
+	Ri=100    
+	Cm=1     
+	Rm=15000 
+	v_init=-89	 	// JP corrected RMP under ZD 7288 		
+	spinescale=2.0  	// scale total area to account for spines 
+	hfactor = 0.000429 // for 2.5 mM K+
+	hinvtau = 0.003078  // for 2.5 mM K+
+}
+
+
+//-------------------------------------------------------------------------
+// initalise passive properties and add spines by scaling Rm and Cm, NOT scaled for spines: axon, soma, 1st 100 um of apical dend, the 1st 20 um of basals 
+//----------------------------------------------------------------------
+
+
+proc init_spine() {
+
+	forall {insert pas g_pas=1/(Rm/spinescale) cm=Cm*spinescale Ra=Ri 
+	}
+
+	axon {g_pas=0.02 }
+	soma {g_pas=1/Rm cm=Cm}
+
+	for i=0,14 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=15,27 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=28,32 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=43,47 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=71,72 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=777,778 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+ 	for i=808,810 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=923,924 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=957,959 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=1006,1007 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=1055,1058 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=1059,1060 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+	for i=1067,1069 {
+		 dend1[i]  {g_pas=1/Rm cm=Cm}
+	}
+}
+
+//-------------------------------------------------
+// Insert active mod.mechanisms
+// --------------------------------------------------
+
+proc init_cell() {
+
+	gna_dend = 27*spinescale 
+	gna_node = 30000   
+	gna_soma = 54
+
+	vshift_na=-1
+ 
+	gkv_axon = 400
+	gkv_soma = 200
+	gkv_dend = 25*spinescale 
+
+	gca_dend = .8*spinescale 
+	gkm_dend =.05*spinescale
+	gkca_dend= 1.5*spinescale
+	git2_dend = 0.0005*spinescale
+	gkap_dend = 0.008*spinescale 		
+
+	gca_soma = .3 
+	gkm_soma = 0.1 
+	gkca_soma = 3 
+
+	// the reconstructed axon 
+	axon {insert na gbar_na = gna_node
+		insert kv gbar_kv = gkv_axon}
+
+	soma {insert na gbar_na = gna_node
+ 		insert kv gbar_kv = gkv_axon}
+
+	for i=0,13 {
+		dend1[i]  {
+			insert na gbar_na=gna_node
+			insert kv gbar_kv = gkv_axon
+		}
+	}
+
+	// all dendrites 
+	for i=28,1090 {
+		dend1[i] {
+			insert na 		gbar_na = gna_dend
+			insert km 		gbar_km = gkm_dend
+		 	insert kca 		gbar_kca = gkca_dend
+			insert kv 		gbar_kv = gkv_dend
+			insert cad 
+			insert ca 		gbar_ca = gca_dend
+			insert it2 		gcabar_it2 = git2_dend
+			insert kap 		gkabar_kap = gkap_dend
+		}
+	}
+
+	// specific soma 
+	for i=14,27 {
+		dend1[i] {
+			insert na 		gbar_na = gna_soma
+			insert kv 		gbar_kv = gkv_soma
+			insert km 		gbar_km = gkm_soma
+			insert ca 		gbar_ca = gca_soma
+			insert kca 		gbar_kca = gkca_soma
+			insert cad
+			insert it2
+			insert kap 
+		} 
+	}
+
+	forall {
+		ena = 60
+	 	ek = -90
+	}
+
+	//the caix increased from 1 -> 4, Ra 0.01 -> 0.05 and Rb 0.02 -> 0.1, according to Schaefer et al, 2003 to allow BAC firing
+	forall { 	
+		caix_kca  = 4
+ 		Ra_kca    = 0.05
+   		Rb_kca    = 0.1
+		taur_cad = 100
+	}
+}
+
+
+//--------------------------------------------------
+// initialise resting Vm
+//----------------------------------------------------
+
+
+proc init_vm() { 
+	forall {
+		e_pas=v_init
+	}
+}
+
+
+
+// --------------------------------------------------------------------------
+// exponential Distribution, identical to patch data (Kole et al., 2006)
+// --------------------------------------------------------------------------
+
+proc hexp() {
+	forall {insert ih
+			gamma_ih=6.8e-12
+			gh_ih = -0.0002
+			ehd_ih=-45	
+			} 
+	
+	access dend1[21]
+	area(0.5)
+	distance()
+	printf("distributes Ih exponentially with dis from soma\n")
+	for i=0,1090 {
+	access dend1[i]
+	ghdbar_ih=gh_ih+(hfactor*(exp(hinvtau*distance(.5))))
+	ghdbar_ih=ghdbar_ih*spinescale	
+	}
+
+
+	// the reconstructed axon 
+	axon { ghdbar_ih=0 }
+	soma { ghdbar_ih=0 }
+	for i=0,13 {
+		dend1[i] { ghdbar_ih=0 }
+	}
+
+
+	// the real soma 
+	for i=14,27 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+
+
+	// the 1st 100 um of the apical trunk 
+	for i=28,32 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=43,47 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=71,72 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+
+
+	// the 1st 20 um of the basals 
+	for i=777,778 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=808,810 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=923,924 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=957,959 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=1006,1007 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=1055,1058 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=1059,1060 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale }
+	}
+	for i=1067,1069 {
+		dend1[i] { ghdbar_ih=ghdbar_ih/spinescale}
+	
+	}
+}

@@ -1,0 +1,69 @@
+// shortRun.hoc is a copy of the fig6b.hoc file.
+// except for the value of tstop it is identical
+
+load_file("nrngui.hoc")
+
+xopen("./Ri18geo.hoc")
+xopen("./Ri18init.hoc")
+
+init_params()
+init_spine()
+init_cell()
+init_vm()
+hexp()
+
+print "Ri18 successfully built\n"
+
+access dend1[21]	//soma
+
+objref b, g
+b = new VBox()
+b.intercept(1)
+g = new Graph()
+g.size(300,tstop,-85,-10)
+g.color(0)
+g.addvar("Vm_dendrite (1000um from soma)","dend1[720].v(.5)", 2, 1)
+g.addvar("Vm_soma","dend1[21].v(.5)", 1, 1)
+g.xaxis(0)
+g.yaxis(0)
+g.begin()
+g.family(1)
+b.intercept(0)
+b.map()
+
+proc init() {local saveDt, i
+	access dend1[21]	//soma
+	finitialize(v_init)
+	fcurrent()
+	saveDt = dt
+	dt = 1
+// original	for i=1,(200/dt) advance()		//to speed up initialization
+	for i=1,(50/dt) advance()		//to speed up initialization
+	dt = saveDt
+}
+
+proc run (){
+	while (t <= tstop) {
+		advance()
+	}
+}
+
+proc advance() {
+	g.plot(t)
+	fadvance()
+	g.flush()
+	doNotify()
+}
+
+t=0
+
+tstop=50 // for short run, original value 10300
+dt=0.1
+
+nrncontrolmenu()
+init()
+startsw()
+continuerun(50) // for short run, original continuerun(10300)
+
+// added for shortRun:
+Graph[0].exec_menu("View = plot")
