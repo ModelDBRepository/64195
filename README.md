@@ -12,9 +12,9 @@ The mod files `ih_stochastic.mod` and `na_stochastic.mod` (see subfolder Stochas
 
 All other mod files were adopted unchanged from Mainen and Sejnowski (1996). `Ka.mod` and `CaT.mod` were from Schaefer et al. (2003) and `syn.mod` from Geiger et al. (1997). Only the `na.mod` was changed to correct for an error in the `trap0()` function.
 
+## Changelog
 6/8/2007 version updated: includes short run demo option for ModelDB
-20120125 upgrades from euler to derivimplicit in `cad.mod` as per [http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592](http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592)
 
----
+1/25/2012 upgrades from euler to derivimplicit in `cad.mod` as per [http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592](http://www.neuron.yale.edu/phpbb/viewtopic.php?f=28&t=592)
 
-2025-05-27 – Standardized to Markdown.
+5/27/2025 Standardized to Markdown.
